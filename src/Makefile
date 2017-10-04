@@ -1,13 +1,16 @@
 CC = gcc
 CPPFLAGS =
-CFLAGS = -std=c11 -D_XOPEN_SOURCE=700 -O2 -Wall -Wextra -Wformat=2 `pkg-config --cflags glib-2.0`
+CFLAGS = -std=c11 -D_XOPEN_SOURCE=700 -O2 -Wall -Wextra -Wformat=2
+CFLAGS += `pkg-config --cflags --libs glib-2.0`
 LDFLAGS =
 LOADLIBES =
-LDLIBS =`pkg-config --libs glib-2.0`
+LDLIBS =
+OBJFLAGS = -c
 
 .DEFAULT: all
 .PHONY: all
-all: httpd
+all:
+	$(CC) $(CFLAGS) httpd.c -o httpd
 
 clean:
 	rm -f *.o

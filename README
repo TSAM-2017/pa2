@@ -1,1 +1,12 @@
 
+# Sequential HTTP server
+
+ * HTTP is implemented on top of TCP.
+ * The server needs to accept and handle HEAD, GET, and POST requests.
+ * It needs to parse the request and reply with a corresponding page.
+ * The server only needs to handle a requests from a single client at a time.
+ * Connections need not be persistent.
+
+ how to build:
+ run 'make' within the 'src/' directory
+ or run 'make -C ./src' within the pa2/ directory

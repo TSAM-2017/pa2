@@ -11,7 +11,7 @@
 
 
 const char *LOG_FILE = "log_file.log";
-#define PORT 1503
+#define PORT 6546
 
 int main() {
     int sockfd, r;
@@ -66,12 +66,30 @@ int main() {
         fprintf(stdout, "Received:\n%s\n", message);
 
         gchar **headers = g_strsplit(message, "\n", -1);
+        /*
+         split message into lines
+         each line is going to contain an http line (header, content type, content length, etc...)
+         search for the http method which is always the first line and see which one is (get, post, etc...)
+         construct the response depending on what method you got
 
-        // Convert message to upper case.
-        for (int i = 0; i < n; ++i) message[i] = toupper(message[i]);
+         example for get write
+
+         "GET HTTP/1.1
+         Content-Type: text/html
+         Content-Length: 35
+
+         <html>http://www.raquelita.com ip</html>"
+        */
 
         // Send the message back.
-        r = send(connfd, message, (size_t) n, 0);
+
+        char response[4096];
+        memset(response, 0, sizeof(char) * 4096);
+        strcat(response, "GET HTTP/1.1\r\nContent-Type: text/html\r\nContent-Length: 35\r\n<html>http://www.raquelita.com ");
+        strcat(response, "127.0.0.1:6525");
+        strcat(response, "</html>");
+
+        r = send(connfd, response, (size_t) sizeof(char) * strlen(response), 0);
         if (r == -1) {
             perror("send");
             exit(EXIT_FAILURE);

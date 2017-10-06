@@ -11,9 +11,20 @@
 
 
 const char *LOG_FILE = "log_file.log";
-#define PORT 6546
+//#define PORT 6546
 
-int main() {
+int main(int argc, char *argv[]) {
+
+    // check number of arguments
+    if (argc != 2) {
+        fprintf(stderr, "expected usage: %s <port> \n", argv[0] );
+        exit(0);
+    }
+    // set portnumber:
+    int PORT = atoi(argv[1]);
+    fprintf(stdout, "PORT: %d\n", PORT);
+
+
     int sockfd, r;
     struct sockaddr_in server, client;
     char message[512];

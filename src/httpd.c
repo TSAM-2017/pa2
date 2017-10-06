@@ -11,7 +11,15 @@
 
 
 const char *LOG_FILE = "log_file.log";
-//#define PORT 6546
+int sockfd, connfd;
+
+void sighandler() {
+    // if SIGINT signal (Ctrl-C) then print
+    fprintf(stdout, "\nShutting down...\n");
+    // close connection
+    shutdown(connfd, SHUT_RDWR);
+    close(connfd);
+}
 
 int main(int argc, char *argv[]) {
 
@@ -22,10 +30,11 @@ int main(int argc, char *argv[]) {
     }
     // set portnumber:
     int PORT = atoi(argv[1]);
-    fprintf(stdout, "PORT: %d\n", PORT);
+    fprintf(stdout, "Listening on port %d\n", PORT);
 
+    signal(SIGINT, sighandler);
 
-    int sockfd, r;
+    int r;
     struct sockaddr_in server, client;
     char message[512];
 
@@ -57,14 +66,18 @@ int main(int argc, char *argv[]) {
     }
 
     for (;;) {
+        fprintf(stdout, "Waiting for connection...\n");
+
         // We first have to accept a TCP connection, connfd is a fresh
         // handle dedicated to this connection.
         socklen_t len = (socklen_t) sizeof(client);
-        int connfd = accept(sockfd, (struct sockaddr *) &client, &len);
+        connfd = accept(sockfd, (struct sockaddr *) &client, &len);
         if (connfd == -1) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
+
+        fprintf(stdout, "TCP connection accepted\n");
 
         // Receive from connfd, not sockfd.
         ssize_t n = recv(connfd, message, sizeof(message) - 1, 0);
@@ -72,6 +85,8 @@ int main(int argc, char *argv[]) {
             perror("recv");
             exit(EXIT_FAILURE);
         }
+
+	fprintf(stdout, "received from connfd\n");
 
         message[n] = '\0';
         fprintf(stdout, "Received:\n%s\n", message);

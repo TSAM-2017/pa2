@@ -87,11 +87,10 @@ int main(int argc, char *argv[]) {
         }
 
 	fprintf(stdout, "received from connfd\n");
-
         message[n] = '\0';
         fprintf(stdout, "Received:\n%s\n", message);
 
-        gchar **headers = g_strsplit(message, "\n", -1);
+        //gchar **headers = g_strsplit(message, "\n", -1);
         /*
          split message into lines
          each line is going to contain an http line (header, content type, content length, etc...)

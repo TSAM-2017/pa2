@@ -6,110 +6,87 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <glib.h>
 
 
 const char *LOG_FILE = "log_file.log";
-#define PORT 1500
+#define PORT 1503
 
-//FUNCTIONS
-void setup();
-void sendMessage();
-void closeConnection();
+int main() {
+    int sockfd, r;
+    struct sockaddr_in server, client;
+    char message[512];
 
-//VARIBLES
-char message[512];
-int sockfd, r;
-struct sockaddr_in server, client;
-
-// LOG FILE
-FILE *log_fd;
-
-void setup(){
-
-    // Open log file
-    log_fd = fopen(LOG_FILE, "a");
-    if(log_fd == NULL){
-        printf("Failed to open the log file.\n");
-    }
-
-    // Create sockets
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) > 0){
-        printf("New socket created\n");
-    }else if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("Failed creating a new socket");
+    // Create and bind a TCP socket.
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        perror("socket");
         exit(EXIT_FAILURE);
     }
 
+    // Network functions need arguments in network byte order instead of
+    // host byte order. The macros htonl, htons convert the values.
     memset(&server, 0, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = htonl(INADDR_ANY);
     server.sin_port = htons(PORT);
-
-    if(bind(sockfd, (struct sockaddr *) &server, sizeof(server)) == 0){
-        printf("Binding to socket");
+    r = bind(sockfd, (struct sockaddr *) &server, (socklen_t) sizeof(server));
+    if (r == -1) {
+        perror("bind");
         exit(EXIT_FAILURE);
     }
 
-    for (;;){
-        if(listen(sockfd, 10) < 0){
-            perror("Server listen");
-            exit(EXIT_FAILURE);
-        }
+    // Before the server can accept messages, it has to listen to the
+    // welcome port. A backlog of one connection is allowed.
+    r = listen(sockfd, 1);
+    if (r == -1) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
 
+    for (;;) {
+        // We first have to accept a TCP connection, connfd is a fresh
+        // handle dedicated to this connection.
         socklen_t len = (socklen_t) sizeof(client);
         int connfd = accept(sockfd, (struct sockaddr *) &client, &len);
-        if (connfd < 0) {
-            perror("Server accept");
+        if (connfd == -1) {
+            perror("accept");
             exit(EXIT_FAILURE);
         }
 
-        if(r > 0){
-            printf("Connection has already been made to this client\n");
-        }
-
-        // Receive from connfd, not sockfd
+        // Receive from connfd, not sockfd.
         ssize_t n = recv(connfd, message, sizeof(message) - 1, 0);
-        if (n < 0){
-            perror("Receiving message failed");
+        if (n == -1) {
+            perror("recv");
             exit(EXIT_FAILURE);
         }
+
         message[n] = '\0';
-        fprintf(stdout, "Received: \n%s\n", message);
+        fprintf(stdout, "Received:\n%s\n", message);
 
-        sendMessage();
-        closeConnection();
+        gchar **headers = g_strsplit(message, "\n", -1);
+
+        // Convert message to upper case.
+        for (int i = 0; i < n; ++i) message[i] = toupper(message[i]);
+
+        // Send the message back.
+        r = send(connfd, message, (size_t) n, 0);
+        if (r == -1) {
+            perror("send");
+            exit(EXIT_FAILURE);
+        }
+
+        // Close the connection.
+        r = shutdown(connfd, SHUT_RDWR);
+        if (r == -1) {
+            perror("shutdown");
+            exit(EXIT_FAILURE);
+        }
+        r  = close(connfd);
+        if (r == -1) {
+            perror("close");
+            exit(EXIT_FAILURE);
+        }
     }
-}
-// send message
-void sendMessage(){
-
-    socklen_t len = (socklen_t) sizeof(client);
-    int connfd = accept(sockfd, (struct sockaddr *) &client, &len);
-    ssize_t n = recv(connfd, message, sizeof(message) - 1, 0);
-
-    r = send(connfd, message, (ssize_t) n, 0);
-    if(r < 0){
-        perror("Send");
-        exit(EXIT_FAILURE);
-    }
-}
-
-void closeConnection(){
-    socklen_t len = (socklen_t) sizeof(client);
-    int connfd = accept(sockfd, (struct sockaddr *) &client, &len);
-    sockfd = shutdown(connfd, SHUT_RDWR);
-    if (sockfd == -1){
-        perror("Shutdown");
-        exit(EXIT_FAILURE);
-    }
-    sockfd = close(connfd);
-    if (sockfd == -1){
-        perror("Close");
-        exit(EXIT_FAILURE);
-    }
-}
-int main(){
-
-
-
 }

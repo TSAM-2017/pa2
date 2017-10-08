@@ -7,6 +7,7 @@
  * The server only needs to handle a requests from a single client at a time.
  * Connections need not be persistent.
 
- how to build:
- run 'make' within the 'src/' directory
- or run 'make -C ./src' within the pa2/ directory
+The program takes the port number as an argument.
+To built and run it use the following commands:
+make -C ./src
+./src/httpd <port>

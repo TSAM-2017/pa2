@@ -85,6 +85,10 @@ void write_get(int client_sock, struct sockaddr_in *client_addr, char *webpage) 
 void write_head(int client_sock) {
     // TODO: Add any extra parameter
     // Return: HTTP/1.1 200 OK
+    /*char response[1024];
+    (void)file;
+    strcat(response, "HTTP/1.0 200 OK\r\n");
+    printf(client_sock, response, strlen(response), 0);*/
 }
 
 // HEAD request, just generate the header of the requested page.
@@ -95,14 +99,17 @@ void write_put(int client_sock) {
 }
 
 // Print out to the log file
-void print_logfile(){
-
+void print_logfile() {
     int status = 200;
     GTimeVal time;
     g_get_current_time(&time);
     time.tv_sec = 0;
     gchar *now = g_time_val_to_iso8601(&time);
     fprintf(log_fd, ": %s %s %d\n", now, inet_ntoa(client_addr.sin_addr), status);
+    fputs(log_fd, inet_ntoa(client_addr.sin_addr));
+    fclose(log_fd);
+    close(client_sock);
+    // This is not finished cause there is nothing written in the file yet
 }
 
 int main(int argc, char *argv[]) {
@@ -134,7 +141,7 @@ int main(int argc, char *argv[]) {
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(PORT); // Connect to server
 
     if (bind(server_sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) == -1) {
         perror("ERROR: Failed to bind socket\n");
@@ -174,7 +181,18 @@ int main(int argc, char *argv[]) {
         write_head(client_sock); // Add any extra parameter
     }
 
-    // Close the connection.
+    // If time runs out
+    int connection[10];
+    int active[10];
+    for (int i = 0; i < 10; ++i) {
+        if(connection[i] != 0){
+            if(g_get_monotonic_time() - active[i] > TIME_INACTIVE){
+                printf("Connection ran out of time\n", i);
+            }
+        }
+    }
+
+    // Then close the connection.
     if (shutdown(client_sock, SHUT_RDWR) == -1) {
         perror("Closing socket");
         exit(EXIT_FAILURE);

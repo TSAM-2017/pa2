@@ -18,13 +18,6 @@ int client_sock;
 // FUNCTIONS
 void print_logfile();
 
-
-
-void error(char *msg) {
-    perror(msg);
-    exit(1);
-}
-
 // GET request has be generated in memory, and should be a HTML 5 page.
 // Content should include:
 // 1. URL of the requested page
@@ -80,7 +73,7 @@ void write_get(int client_sock, struct sockaddr_in *client_addr, char *webpage) 
     printf("\nResponse\n%s\n", response);
 
     if (write(client_sock, response, (int) strlen(response)) == -1) {
-        error("ERROR writing to socket");
+        perror("ERROR writing to socket");
     }
 }
 

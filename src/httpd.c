@@ -14,6 +14,7 @@ FILE *log_fd;
 struct sockaddr_in serv_addr;
 struct sockaddr_in client_addr;
 int client_sock;
+const int TIME_INACTIVE = 30;
 
 // FUNCTIONS
 void print_logfile();
@@ -119,7 +120,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "expected usage: %s <port> \n", argv[0] );
         exit(0);
     }
-    // set portnumber: test
+    // set portnumber
     int PORT = atoi(argv[1]);
     fprintf(stdout, "Listening on port %d\n", PORT);
 

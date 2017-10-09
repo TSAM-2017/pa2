@@ -10,4 +10,7 @@
 The program takes the port number as an argument.
 To built and run it use the following commands:
 make -C ./src
-./src/httpd <port>
+./src/httpd <PORT>
+
+In browser write
+127.0.0.1:PORT

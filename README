@@ -12,5 +12,8 @@ To built and run it use the following commands:
 make -C ./src
 ./src/httpd <PORT>
 
-In browser write
-127.0.0.1:PORT
+Next open a browser and type the following:
+127.0.0.1:PORT or localhost:PORT
+
+
+
